@@ -53,7 +53,7 @@ public class BarcodeScanner extends CordovaPlugin {
 
     private String [] permissions = { Manifest.permission.CAMERA };
 
-    private JSONArray requestArgs;
+    private Intent intentScan;
     private CallbackContext callbackContext;
 
     /**
@@ -81,7 +81,6 @@ public class BarcodeScanner extends CordovaPlugin {
     @Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) {
         this.callbackContext = callbackContext;
-        this.requestArgs = args;
 
         if (action.equals(ENCODE)) {
             JSONObject obj = args.optJSONObject(0);
@@ -105,13 +104,7 @@ public class BarcodeScanner extends CordovaPlugin {
                 return true;
             }
         } else if (action.equals(SCAN)) {
-
-            //android permission auto add
-            if(!hasPermisssion()) {
-              requestPermissions(0);
-            } else {
-              scan(args);
-            }
+	    scan(args);
         } else {
             return false;
         }
@@ -122,7 +115,7 @@ public class BarcodeScanner extends CordovaPlugin {
      * Starts an intent to scan and decode a barcode.
      */
     public void scan(JSONArray args) {
-        Intent intentScan = new Intent(SCAN_INTENT);
+        intentScan = new Intent(SCAN_INTENT);
         intentScan.addCategory(Intent.CATEGORY_DEFAULT);
 
         // add config as intent extras
@@ -165,8 +158,12 @@ public class BarcodeScanner extends CordovaPlugin {
 
         // avoid calling other phonegap apps
         intentScan.setPackage(this.cordova.getActivity().getApplicationContext().getPackageName());
-
-        this.cordova.startActivityForResult((CordovaPlugin) this, intentScan, REQUEST_CODE);
+	//android permission auto add
+	if(!hasPermisssion()) {
+	  requestPermissions(0);
+	} else {
+	  this.cordova.startActivityForResult((CordovaPlugin) this, intentScan, REQUEST_CODE);
+	}
     }
 
     /**
@@ -273,7 +270,7 @@ public class BarcodeScanner extends CordovaPlugin {
        switch(requestCode)
        {
            case 0:
-               scan(this.requestArgs);
+		this.cordova.startActivityForResult((CordovaPlugin) this, this.intentScan, REQUEST_CODE);
                break;
        }
    }
